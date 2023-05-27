@@ -35,19 +35,19 @@ fn main() -> ! {
     let io = IO::new(peripherals.GPIO, peripherals.IO_MUX);
 
     /* =========== ROWS ============ */
-    let mut row_gpio = [
-        io.pins.gpio4.into_pull_up_input(),
-        io.pins.gpio5.into_pull_up_input(),
-        io.pins.gpio6.into_pull_up_input(),
-        io.pins.gpio7.into_pull_up_input(),
+    let row_gpio = [
+        io.pins.gpio4.into_pull_up_input().degrade(),
+        io.pins.gpio5.into_pull_up_input().degrade(),
+        io.pins.gpio6.into_pull_up_input().degrade(),
+        io.pins.gpio7.into_pull_up_input().degrade(),
     ];
 
     /* =========== COLUMNS ============ */
-    let mut column_gpio = [
-        io.pins.gpio15.into_push_pull_output(),
-        io.pins.gpio16.into_push_pull_output(),
-        io.pins.gpio17.into_push_pull_output(),
-        io.pins.gpio18.into_push_pull_output(),
+    let column_gpio = [
+        io.pins.gpio15.into_open_drain_output().degrade(),
+        io.pins.gpio16.into_open_drain_output().degrade(),
+        io.pins.gpio17.into_open_drain_output().degrade(),
+        io.pins.gpio18.into_open_drain_output().degrade(),
     ];
 
 
@@ -58,19 +58,28 @@ fn main() -> ! {
                     ["*", "0", "#", "D"]];
 
     loop {
-        let mut row: Option<u8> = None;
-        let mut column: Option<u8> = None;
+        /*for mut column in &column_gpio {
+            column.set_high().unwrap();
 
-        for (column, column_gpio) in column_gpio {
-            column_gpio.set_high().unwrap();
-
-            for (row, row_gpio) in row_gpio {
-                if row_gpio.is_low().unwrap() {
-                    println!("{} : {}", row, column);
+            for mut row in &row_gpio {
+                if row.is_low().unwrap() {
+                    println!("Something pressed")
                 }
             }
 
-            column_gpio.set_high().unwrap();
-        }
+            column.set_low().unwrap();
+        }*/
+
+        column_gpio.iter().for_each(|column| {
+            // column.set_high().unwrap();
+
+            row_gpio.iter().for_each(|row| {
+                if row.is_low().unwrap() {
+                    println!("Key pressed");
+                }
+            });
+
+            // column.set_low().unwrap();
+        });
     }
 }
