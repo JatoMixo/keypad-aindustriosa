@@ -35,7 +35,7 @@ fn main() -> ! {
     let io = IO::new(peripherals.GPIO, peripherals.IO_MUX);
 
     /* =========== ROWS ============ */
-    let row_gpio = [
+    let mut row_gpio = [
         io.pins.gpio4.into_pull_up_input().degrade(),
         io.pins.gpio5.into_pull_up_input().degrade(),
         io.pins.gpio6.into_pull_up_input().degrade(),
@@ -43,12 +43,17 @@ fn main() -> ! {
     ];
 
     /* =========== COLUMNS ============ */
-    let column_gpio = [
-        io.pins.gpio15.into_open_drain_output().degrade(),
-        io.pins.gpio16.into_open_drain_output().degrade(),
-        io.pins.gpio17.into_open_drain_output().degrade(),
-        io.pins.gpio18.into_open_drain_output().degrade(),
+    let mut column_gpio = [
+        io.pins.gpio15.into_push_pull_output().degrade(),
+        io.pins.gpio16.into_push_pull_output().degrade(),
+        io.pins.gpio17.into_push_pull_output().degrade(),
+        io.pins.gpio18.into_push_pull_output().degrade(),
     ];
+
+    // Set columns to low
+    column_gpio.iter_mut().for_each(|mut column| {
+        column.set_low().unwrap();
+    });
 
 
     /* =========== KEYBOARD =========== */
@@ -57,29 +62,32 @@ fn main() -> ! {
                     ["7", "8", "9", "C"],
                     ["*", "0", "#", "D"]];
 
-    loop {
-        /*for mut column in &column_gpio {
-            column.set_high().unwrap();
 
-            for mut row in &row_gpio {
-                if row.is_low().unwrap() {
-                    println!("Something pressed")
-                }
-            }
+    let mut actual_row = 0;
+    let mut actual_column = 0;
+    let mut last_key_pressed = "1";
+    let mut last_time_key_pressed = 0;
+
+
+    loop {
+        for mut column in column_gpio.iter_mut() {
 
             column.set_low().unwrap();
-        }*/
 
-        column_gpio.iter().for_each(|column| {
-            // column.set_high().unwrap();
-
-            row_gpio.iter().for_each(|row| {
+            for mut row in row_gpio.iter_mut() {
                 if row.is_low().unwrap() {
-                    println!("Key pressed");
+                    println!("Key pressed: {}", keyboard[actual_row][actual_column]);
+                    last_key_pressed = keyboard[actual_row][actual_column];
                 }
-            });
 
-            // column.set_low().unwrap();
-        });
+                actual_row += 1;
+            }
+
+            actual_row = 0;
+            actual_column += 1;
+            column.set_high().unwrap();
+        }
+
+        actual_column = 0;
     }
 }
